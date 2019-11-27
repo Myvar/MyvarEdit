@@ -6,7 +6,7 @@ namespace mEdit.Core
 
         static mEditEngine()
         {
-            DisplayBuffer.DrawString("Hello World!");
+            DisplayBuffer.DrawString("Hello World!\nMy Name is bob? i think\n++ <= => := ->");
         }
     }
 }

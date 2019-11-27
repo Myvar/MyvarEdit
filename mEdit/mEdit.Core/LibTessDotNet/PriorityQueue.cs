@@ -38,7 +38,7 @@ using System.Diagnostics;
 #if DOUBLE
 namespace LibTessDotNet.Double
 #else
-namespace LibTessDotNet
+namespace mEdit.Core.LibTessDotNet
 #endif
 {
     internal class PriorityQueue<TValue> where TValue : class

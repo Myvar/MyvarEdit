@@ -31,13 +31,12 @@
 ** LibTessDotNet: Remi Gillig, https://github.com/speps/LibTessDotNet
 */
 
-using System;
 using System.Diagnostics;
 
 #if DOUBLE
 namespace LibTessDotNet.Double
 #else
-namespace LibTessDotNet
+namespace mEdit.Core.LibTessDotNet
 #endif
 {
     internal class Mesh : MeshUtils.Pooled<Mesh>

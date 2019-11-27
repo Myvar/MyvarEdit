@@ -82,10 +82,15 @@ namespace mEdit.Core.OpenGL
                 var val = (Vector3f)value;
                 GL.Uniform3(Uniforms[name], val.X, val.Y, val.Z);
             }
+            else if (value.GetType() == typeof(Vector4f))
+            {
+                var val = (Vector4f)value;
+                GL.Uniform4(Uniforms[name], val.X, val.Y, val.Z, val.W);
+            }
             else if (value.GetType() == typeof(Color))
             {
                 var val = (Color)value;
-                GL.Uniform3(Uniforms[name], val.R + 0.00001f / 255, val.G+ 0.00001f / 255, val.B+ 0.00001f / 255);
+                GL.Uniform4(Uniforms[name], val.R + 0.00001f / 255, val.G+ 0.00001f / 255, val.B+ 0.00001f / 255, val.A+ 0.00001f / 255);
             }
             else if (value.GetType() == typeof(Matrix4f))
             {

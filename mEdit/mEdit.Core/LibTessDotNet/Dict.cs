@@ -34,7 +34,7 @@
 #if DOUBLE
 namespace LibTessDotNet.Double
 #else
-namespace LibTessDotNet
+namespace mEdit.Core.LibTessDotNet
 #endif
 {
     internal class Dict<TValue> where TValue : class

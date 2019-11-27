@@ -31,16 +31,15 @@
 ** LibTessDotNet: Remi Gillig, https://github.com/speps/LibTessDotNet
 */
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-
 #if DOUBLE
 using Real = System.Double;
 namespace LibTessDotNet.Double
 #else
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using Real = System.Single;
-namespace LibTessDotNet
+namespace mEdit.Core.LibTessDotNet
 #endif
 {
     public struct Vec3

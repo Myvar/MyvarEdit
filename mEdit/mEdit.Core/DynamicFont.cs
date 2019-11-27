@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using LibTessDotNet;
+using mEdit.Core.LibTessDotNet;
 using mEdit.Core.OpenGL;
 using TrueTypeSharp;
 
@@ -10,7 +10,7 @@ namespace mEdit.Core
 {
     public class DynamicFont
     {
-        private Dictionary<char, Model> _dictionary = new Dictionary<char, Model>();
+        private Dictionary<uint, Model> _dictionary = new Dictionary<uint, Model>();
 
         private TrueTypeFont _font;
 
@@ -21,18 +21,69 @@ namespace mEdit.Core
                 s.CopyTo(mem);
                 _font = new TrueTypeFont(mem.ToArray(), 0);
             }
+
+            for (byte i = 0; i < 255; i++)
+            {
+                LoadGlyph((char) i);
+            }
         }
 
-        public Model this[char c]
+        public (
+            Model mesh,
+            float advanceWidth,
+            float leftSideBearing,
+            float lineAscender,
+            float lineDescender,
+            float lineGap,
+            float x0,
+            float y0,
+            float x1,
+            float y1) GetGlyph(uint c, int scalepx)
+        {
+            if (!_dictionary.ContainsKey(c))
+            {
+                LoadGlyph(c);
+            }
+
+            int x0, y0, x1, y1;
+            _font.GetGlyphBox(c, out x0, out y0, out x1, out y1);
+
+            _font.GetGlyphHMetrics(c, out var advanceWidth, out var leftSideBearing);
+
+            _font.GetFontVMetricsAtScale(scalepx, out var lineAscender, out var lineDescender, out var lineGap);
+
+            return
+            (
+                _dictionary[c],
+                Normalize(advanceWidth, x0, x1),
+                Normalize(leftSideBearing, x0, x1),
+                Normalize(lineAscender, y0, y1),
+                Normalize(lineDescender, y0, y1),
+                Normalize(lineGap, y0, y1),
+                x0,
+                y0,
+                x1,
+                y1
+            );
+        }
+
+        public (
+            Model mesh,
+            float advanceWidth,
+            float leftSideBearing,
+            float lineAscender,
+            float lineDescender,
+            float lineGap,
+            float x0,
+            float y0,
+            float x1,
+            float y1)
+            this[char ch, int scalepx]
         {
             get
             {
-                if (!_dictionary.ContainsKey(c))
-                {
-                    LoadGlyph(c);
-                }
-
-                return _dictionary[c];
+                var c = _font.FindGlyphIndex(ch);
+                return GetGlyph(c, scalepx);
             }
         }
 
@@ -45,19 +96,29 @@ namespace mEdit.Core
 
         float Normalize(float value, float min, float max)
         {
+            return value;
             return (value - min) / (max - min);
         }
 
 
-        private void LoadGlyph(char ch)
+        private void LoadGlyph(uint ch)
         {
             var vertexes = new List<Vertex>();
             var indecies = new List<uint>();
             // Render some characters...
 
             int x0, y0, x1, y1;
-            var shape = _font.GetCodepointShape(ch);
-            _font.GetCodepointBox(ch, out x0, out y0, out x1, out y1);
+
+            var shape = _font.GetGlyphShape(ch);
+            _font.GetGlyphBox(ch, out x0, out y0, out x1, out y1);
+
+            var absy = Math.Abs(y0);
+            y0 += absy;
+            y1 += absy;
+
+            var absx = Math.Abs(x0);
+            x0 += absx;
+            x1 += absx;
 
             var tess = new Tess();
 
@@ -88,7 +149,7 @@ namespace mEdit.Core
                     }
                 }
 
-                var res = it2.Type == GlyphVertexType.Curve ? 100f : 1f;
+                var res = it2.Type == GlyphVertexType.Curve ? 4f : 1f;
 
                 for (int j = 0; j <= res; j++)
                 {
@@ -126,13 +187,14 @@ namespace mEdit.Core
                 var v1 = tess.Vertices[tess.Elements[i * 3 + 1]].Position;
                 var v2 = tess.Vertices[tess.Elements[i * 3 + 2]].Position;
 
+
                 vertexes.Add(new Vertex(new Vector3f(
                     Normalize(v0.X, x0, x1), Normalize(v0.Y, y0, y1), 0)));
                 indecies.Add((uint) (vertexes.Count - 1));
                 vertexes.Add(new Vertex(new Vector3f(
                     Normalize(v1.X, x0, x1), Normalize(v1.Y, y0, y1), 0)));
                 indecies.Add((uint) (vertexes.Count - 1));
-                   vertexes.Add(new Vertex(new Vector3f(
+                vertexes.Add(new Vertex(new Vector3f(
                     Normalize(v2.X, x0, x1), Normalize(v2.Y, y0, y1), 0)));
                 indecies.Add((uint) (vertexes.Count - 1));
             }
