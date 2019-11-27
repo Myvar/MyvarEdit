@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netcoreapp3.0</TargetFramework>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+
+    <ItemGroup>
+        <EmbeddedResource Include="_res/**/*" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <PackageReference Include="OpenTK.NetStandard" Version="1.0.7-prerelease" />
+      <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0007" />
+      <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+      <PackageReference Include="TrueTypeSharp" Version="1.0.5" />
+    </ItemGroup>
+</Project>
