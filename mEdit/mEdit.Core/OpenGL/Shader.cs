@@ -33,8 +33,6 @@ namespace mEdit.Core.OpenGL
             AddFragmentShader(Utils.GetResourceFile(fileName + ".fs.glsl"));
 
             CompileShader();
-
-
         }
 
 
@@ -71,30 +69,32 @@ namespace mEdit.Core.OpenGL
 
             if (value.GetType() == typeof(int))
             {
-                GL.Uniform1(Uniforms[name], (int)value);
+                GL.Uniform1(Uniforms[name], (int) value);
             }
             else if (value.GetType() == typeof(float))
             {
-                GL.Uniform1(Uniforms[name], (float)value);
+                GL.Uniform1(Uniforms[name], (float) value);
             }
             else if (value.GetType() == typeof(Vector3f))
             {
-                var val = (Vector3f)value;
+                var val = (Vector3f) value;
                 GL.Uniform3(Uniforms[name], val.X, val.Y, val.Z);
             }
             else if (value.GetType() == typeof(Vector4f))
             {
-                var val = (Vector4f)value;
+                var val = (Vector4f) value;
                 GL.Uniform4(Uniforms[name], val.X, val.Y, val.Z, val.W);
             }
             else if (value.GetType() == typeof(Color))
             {
-                var val = (Color)value;
-                GL.Uniform4(Uniforms[name], val.R + 0.00001f / 255, val.G+ 0.00001f / 255, val.B+ 0.00001f / 255, val.A+ 0.00001f / 255);
+                var val = (Color) value;
+                GL.Uniform4(Uniforms[name], (val.R + 0.00001f) / 255, (val.G + 0.00001f) / 255,
+                    (val.B + 0.00001f) / 255,
+                    (val.A + 0.00001f) / 255f);
             }
             else if (value.GetType() == typeof(Matrix4f))
             {
-                var val = (Matrix4f)value;
+                var val = (Matrix4f) value;
                 var mat4 = new Matrix4(
                     new Vector4(val[0, 0], val[0, 1], val[0, 2], val[0, 3]),
                     new Vector4(val[1, 0], val[1, 1], val[1, 2], val[1, 3]),
@@ -150,8 +150,6 @@ namespace mEdit.Core.OpenGL
                 Console.WriteLine(GL.GetProgramInfoLog(program));
                 Environment.Exit(0);
             }
-
-
         }
 
         private void AddProgram(string text, ShaderType type)

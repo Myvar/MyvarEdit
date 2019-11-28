@@ -1,12 +1,38 @@
+using System.Collections.Generic;
+using System.Drawing;
+using mEdit.Core.Editor;
+
 namespace mEdit.Core
 {
     public static class mEditEngine
     {
-        public static TextDisplayBuffer DisplayBuffer { get; set; } = new TextDisplayBuffer(25, 80);
+        public static Workspace Workspace { get; set; } = new Workspace();
+
+        public static List<MEditRenderable> Renderables { get; set; } = new List<MEditRenderable>
+        {
+            new Window
+            {
+                CanRender = true
+            },
+            new DropDownTerminal()
+            {
+                CanRender = true
+            },
+        };
 
         static mEditEngine()
         {
-            DisplayBuffer.DrawString("Hello World!\nMy Name is bob? i think\n++ <= => := ->");
+        }
+
+        public static void Render()
+        {
+            foreach (var mEditRenderable in Renderables)
+            {
+                if (mEditRenderable.CanRender)
+                {
+                    mEditRenderable.Render();
+                }
+            }
         }
     }
 }

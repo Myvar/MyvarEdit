@@ -9,8 +9,4 @@
       <ProjectReference Include="..\mEdit.Core\mEdit.Core.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <PackageReference Include="TrueTypeSharp" Version="1.0.5" />
-    </ItemGroup>
-
 </Project>
