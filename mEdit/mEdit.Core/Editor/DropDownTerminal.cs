@@ -1,7 +1,9 @@
 using System;
 using System.Drawing;
+using System.Runtime.CompilerServices;
 using System.Text;
 using OpenTK;
+using OpenTK.Graphics.ES10;
 using OpenTK.Input;
 
 namespace mEdit.Core.Editor
@@ -75,6 +77,12 @@ namespace mEdit.Core.Editor
                 mEditEngine.Workspace.Eval(Command);
                 Command = "";
                 IBeamOffset = 0;
+            }
+
+            if (e.Key == Key.Tilde)
+            {
+                State = e.Shift ? DropDownDeployState.Full : DropDownDeployState.Peek;
+                CanRender = !CanRender;
             }
 
             return null;

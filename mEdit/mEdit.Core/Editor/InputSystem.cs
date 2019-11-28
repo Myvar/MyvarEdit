@@ -60,6 +60,8 @@ namespace mEdit.Core.Editor
                     return ' ';
                 case Key.BackSpace:
                     return '\b';
+                case Key.Minus:
+                    return e.Shift ? '_' : '-';
                 case Key.Quote:
                     return e.Shift ? '"' : '\'';
             }

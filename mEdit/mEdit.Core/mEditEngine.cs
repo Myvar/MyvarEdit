@@ -15,9 +15,6 @@ namespace mEdit.Core
                 CanRender = true
             },
             new DropDownTerminal()
-            {
-                CanRender = true
-            },
         };
 
         static mEditEngine()
