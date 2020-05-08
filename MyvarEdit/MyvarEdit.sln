@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyvarEdit", "MyvarEdit\MyvarEdit.csproj", "{AC535137-DE05-4C74-9E44-6457E434B33E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyvarEdit.TrueType", "MyvarEdit.TrueType\MyvarEdit.TrueType.csproj", "{71A82AF0-8CB9-4BBC-9D99-94341F90DB00}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AC535137-DE05-4C74-9E44-6457E434B33E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC535137-DE05-4C74-9E44-6457E434B33E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC535137-DE05-4C74-9E44-6457E434B33E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC535137-DE05-4C74-9E44-6457E434B33E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71A82AF0-8CB9-4BBC-9D99-94341F90DB00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71A82AF0-8CB9-4BBC-9D99-94341F90DB00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71A82AF0-8CB9-4BBC-9D99-94341F90DB00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71A82AF0-8CB9-4BBC-9D99-94341F90DB00}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
