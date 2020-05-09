@@ -15,18 +15,22 @@ namespace MyvarEdit.TrueType
 
         public int A = 1, B, C, D = 1, E, F;
     }
+    public class ComponentTriangle
+    {
+        public GlyfPoint A, B, C;
+    }
 
 
     public class GlyfPoint
     {
-        public float X, Y, Cx, Cy;
+        public float X, Y;
+        public bool isMidpoint;
+        public bool IsOnCurve;
 
         public GlyfPoint(float x, float y)
         {
             X = x;
             Y = y;
-            Cx = x;
-            Cy = y;
         }
     }
 
@@ -43,6 +47,7 @@ namespace MyvarEdit.TrueType
 
         public List<ushort> ContourEnds { get; set; } = new List<ushort>();
         public List<GlyfPoint> Points { get; set; } = new List<GlyfPoint>();
+        public List<ComponentTriangle> Triangles { get; set; } = new List<ComponentTriangle>();
         public List<bool> Curves { get; set; } = new List<bool>();
         public List<ComponentGlyph> Components { get; set; } = new List<ComponentGlyph>();
     }

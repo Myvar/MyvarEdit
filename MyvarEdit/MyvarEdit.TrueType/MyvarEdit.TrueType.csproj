@@ -6,6 +6,7 @@
 
     <ItemGroup>
       <PackageReference Include="DeepCopy" Version="1.0.3" />
+      <PackageReference Include="LibTessDotNet" Version="1.1.13" />
     </ItemGroup>
 
 </Project>

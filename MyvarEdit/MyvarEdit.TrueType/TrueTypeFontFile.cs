@@ -10,6 +10,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using DeepCopy;
+using LibTessDotNet;
 using MyvarEdit.TrueType.Internals;
 
 namespace MyvarEdit.TrueType
@@ -80,7 +81,7 @@ namespace MyvarEdit.TrueType
             {
                 var maped = _cMapIndexes[charCode];
                 stream.Position = glyfOffset + glyfOffsets[maped];
-                Glyfs.Add(charCode, ReadGlyph(stream));
+                Glyfs.Add(charCode, ReadGlyph(stream, (byte) charCode));
             }
 
 
@@ -90,8 +91,6 @@ namespace MyvarEdit.TrueType
                 {
                     foreach (var component in glyf.Components)
                     {
-
-                    
                         var componentCharCode = _cMapIndexes.Values.ToList().IndexOf(component.GlyphIndex);
 
                         if (componentCharCode == -1) componentCharCode = 0;
@@ -100,7 +99,7 @@ namespace MyvarEdit.TrueType
                         {
                             var maped = _cMapIndexes[componentCharCode];
                             stream.Position = glyfOffset + glyfOffsets[maped];
-                            Glyfs.Add(componentCharCode, ReadGlyph(stream));
+                            Glyfs.Add(componentCharCode, ReadGlyph(stream, (byte) charcode));
                         }
 
                         var shapes = DeepCopier.Copy(Glyfs[componentCharCode].Shapes);
@@ -144,7 +143,7 @@ namespace MyvarEdit.TrueType
             return p1 + MathF.Pow(1f - t, 2) * (p0 - p1) + MathF.Pow(t, 2) * (p2 - p1);
         }
 
-        private Glyf ReadGlyph(Stream s)
+        private Glyf ReadGlyph(Stream s, byte charcode)
         {
             var re = new Glyf();
             var gd = ReadStruct<GlyphDescription>(s);
@@ -258,27 +257,15 @@ namespace MyvarEdit.TrueType
                     );
                 }
 
-                var cnt = 0;
+
                 re.Points.Add(new GlyfPoint(tmpXPoints[0], tmpYPoints[0]));
                 re.Curves.Add(lst[0]);
                 for (int i = 1; i < max; i++)
                 {
-                    if (!lst[i] && !lst[i - 1])
+                    re.Points.Add(new GlyfPoint(tmpXPoints[i], tmpYPoints[i])
                     {
-                        var midPoint = MidpointRounding(new GlyfPoint(tmpXPoints[i], tmpYPoints[i]),
-                            new GlyfPoint(tmpXPoints[i - 1], tmpYPoints[i - 1]));
-                        re.Points.Add(midPoint);
-                        re.Curves.Add(true);
-
-                        for (int j = cnt; j < re.ContourEnds.Count; j++)
-                        {
-                            re.ContourEnds[(ushort) j]++;
-                        }
-                    }
-
-                    if (re.ContourEnds.Contains((ushort) i)) cnt++;
-
-                    re.Points.Add(new GlyfPoint(tmpXPoints[i], tmpYPoints[i]));
+                        IsOnCurve = lst[i]
+                    });
                     re.Curves.Add(lst[i]);
                 }
 
@@ -286,11 +273,11 @@ namespace MyvarEdit.TrueType
                 for (var i = 1; i < re.Points.Count; i++)
                 {
                     var point = re.Points[i];
-                    var beforepoint = re.Points[i - 1];
 
                     if (re.ContourEnds.Contains((ushort) i))
                     {
                         points.Add(point);
+
 
                         if (re.Shapes.Count == 0) points.Add(re.Points[0]);
                         re.Shapes.Add(points);
@@ -298,23 +285,64 @@ namespace MyvarEdit.TrueType
                     }
                     else
                     {
-                        if (!re.Curves[i])
+                        points.Add(point);
+                    }
+                }
+
+                foreach (var shape in re.Shapes)
+                {
+                    for (var i = 1; i < shape.Count; i++)
+                    {
+                        var a = shape[i];
+                        var b = shape[i - 1];
+                        if (!a.IsOnCurve && !b.IsOnCurve)
+                        {
+                            var midPoint = MidpointRounding(a, b);
+                            midPoint.isMidpoint = true;
+                            midPoint.IsOnCurve = true;
+                            shape.Insert(i, midPoint);
+                            i++;
+                        }
+                    }
+                }
+
+                // if (charcode == (byte) '8') Debugger.Break();
+
+                foreach (var shape in re.Shapes)
+                {
+                    var shapes = shape.ToArray();
+                    shape.Clear();
+                    //shape.Add(shapes[0]);
+                    for (var i = 0; i < shapes.Length ; i++)
+                    {
+                        if (!shapes[i].IsOnCurve)
                         {
                             var res = 15f;
+
+                            var a = i == 0 ? shapes[^1] : shapes[i - 1];
+                            var b = shapes[i];
+                            var c = i + 1 >= shapes.Length ? shapes[0] : shapes[i + 1];
+
 
                             for (int j = 0; j <= res; j++)
                             {
                                 var t = j / res;
-                                points.Add(new GlyfPoint(
-                                    Bezier(re.Points[i - 1].X, re.Points[i].Cx, re.Points[i + 1].X, t),
-                                    Bezier(re.Points[i - 1].Y, re.Points[i].Cy, re.Points[i + 1].Y, t)));
+                                shape.Add( new GlyfPoint(
+                                    Bezier(a.X, b.X, c.X, t),
+                                    Bezier(a.Y, b.Y, c.Y, t))
+                                {
+                                    //isMidpoint = true
+                                });
                             }
+
                         }
                         else
                         {
-                            points.Add(point);
+                            shape.Add(shapes[i]);
                         }
                     }
+                    
+                   // shape.Add(shapes.Last());
                 }
             }
             else
@@ -385,6 +413,37 @@ namespace MyvarEdit.TrueType
                 re.Components.AddRange(components);
             }
 
+            //now triangulate glyf
+            var tess = new LibTessDotNet.Tess();
+
+            foreach (var shape in re.Shapes)
+            {
+                var contour = new LibTessDotNet.ContourVertex[shape.Count];
+                for (var i = 0; i < shape.Count; i++)
+                {
+                    var point = shape[i];
+                    contour[i] = new ContourVertex(new Vec3(point.X, point.Y, 0));
+                }
+
+                tess.AddContour(contour);
+            }
+
+            tess.Tessellate(LibTessDotNet.WindingRule.EvenOdd, LibTessDotNet.ElementType.Polygons, 3);
+
+            int numTriangles = tess.ElementCount;
+            for (int i = 0; i < numTriangles; i++)
+            {
+                var v0 = tess.Vertices[tess.Elements[i * 3]].Position;
+                var v1 = tess.Vertices[tess.Elements[i * 3 + 1]].Position;
+                var v2 = tess.Vertices[tess.Elements[i * 3 + 2]].Position;
+
+                re.Triangles.Add(new ComponentTriangle()
+                {
+                    A = new GlyfPoint(v0.X, v0.Y),
+                    B = new GlyfPoint(v1.X, v1.Y),
+                    C = new GlyfPoint(v2.X, v2.Y),
+                });
+            }
 
             return re;
         }
