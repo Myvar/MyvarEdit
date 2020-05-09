@@ -299,7 +299,7 @@ namespace MyvarEdit.TrueType
                         {
                             var midPoint = MidpointRounding(a, b);
                             midPoint.isMidpoint = true;
-                            midPoint.IsOnCurve = true;
+                            midPoint.IsOnCurve = false;
                             shape.Insert(i, midPoint);
                             i++;
                         }
@@ -312,8 +312,8 @@ namespace MyvarEdit.TrueType
                 {
                     var shapes = shape.ToArray();
                     shape.Clear();
-                    //shape.Add(shapes[0]);
-                    for (var i = 0; i < shapes.Length ; i++)
+                    shape.Add(shapes[0]);
+                    for (var i = 1; i < shapes.Length - 1; i++)
                     {
                         if (!shapes[i].IsOnCurve)
                         {
@@ -323,26 +323,24 @@ namespace MyvarEdit.TrueType
                             var b = shapes[i];
                             var c = i + 1 >= shapes.Length ? shapes[0] : shapes[i + 1];
 
-
                             for (int j = 0; j <= res; j++)
                             {
                                 var t = j / res;
-                                shape.Add( new GlyfPoint(
+                                shape.Add(new GlyfPoint(
                                     Bezier(a.X, b.X, c.X, t),
                                     Bezier(a.Y, b.Y, c.Y, t))
                                 {
                                     //isMidpoint = true
                                 });
                             }
-
                         }
                         else
                         {
                             shape.Add(shapes[i]);
                         }
                     }
-                    
-                   // shape.Add(shapes.Last());
+
+                    shape.Add(shapes.Last());
                 }
             }
             else
