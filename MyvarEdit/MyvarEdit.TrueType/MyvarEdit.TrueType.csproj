@@ -4,4 +4,8 @@
         <TargetFramework>netcoreapp3.1</TargetFramework>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="DeepCopy" Version="1.0.3" />
+    </ItemGroup>
+
 </Project>
