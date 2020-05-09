@@ -15,7 +15,7 @@ namespace MyvarEdit
             var ttf = new TrueTypeFontFile();
             ttf.Load("./Fonts/Hack-Regular.ttf");
 
-            var gl = ttf.Glyfs[(byte) '?'];
+            var gl = ttf.Glyfs[(byte) '0'];
 
             var w = gl.Xmax + Math.Abs(gl.Xmin);
             var h = gl.Ymax + Math.Abs(gl.Ymin);

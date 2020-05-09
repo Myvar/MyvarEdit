@@ -270,22 +270,13 @@ namespace MyvarEdit.TrueType
                 }
 
                 var points = new List<GlyfPoint>();
-                for (var i = 1; i < re.Points.Count; i++)
+                for (var i = 0; i < re.Points.Count; i++)
                 {
-                    var point = re.Points[i];
-
+                    points.Add(re.Points[i]);
                     if (re.ContourEnds.Contains((ushort) i))
                     {
-                        points.Add(point);
-
-
-                        if (re.Shapes.Count == 0) points.Add(re.Points[0]);
                         re.Shapes.Add(points);
                         points = new List<GlyfPoint>();
-                    }
-                    else
-                    {
-                        points.Add(point);
                     }
                 }
 
@@ -299,7 +290,6 @@ namespace MyvarEdit.TrueType
                         {
                             var midPoint = MidpointRounding(a, b);
                             midPoint.isMidpoint = true;
-                            midPoint.IsOnCurve = false;
                             shape.Insert(i, midPoint);
                             i++;
                         }
@@ -313,9 +303,9 @@ namespace MyvarEdit.TrueType
                     var shapes = shape.ToArray();
                     shape.Clear();
                     shape.Add(shapes[0]);
-                    for (var i = 1; i < shapes.Length - 1; i++)
+                    for (var i = 1; i < shapes.Length; i++)
                     {
-                        if (!shapes[i].IsOnCurve)
+                        if (!shapes[i].IsOnCurve && !shapes[i].isMidpoint)
                         {
                             var res = 15f;
 
@@ -340,7 +330,7 @@ namespace MyvarEdit.TrueType
                         }
                     }
 
-                    shape.Add(shapes.Last());
+                    //shape.Add(shapes.Last());
                 }
             }
             else
