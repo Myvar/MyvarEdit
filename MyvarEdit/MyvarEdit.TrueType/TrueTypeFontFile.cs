@@ -18,6 +18,9 @@ namespace MyvarEdit.TrueType
     public class TrueTypeFontFile
     {
         public TrueTypeHeader Header { get; set; }
+        public HorizontalHeaderTable HorizontalHeaderTable { get; set; }
+        public VerticalHeaderTable VerticalHeaderTable { get; set; }
+        public List<longHorMetric> longHorMetrics { get; set; } = new List<longHorMetric>();
         public MaxP MaxP { get; set; }
         private Dictionary<int, int> _cMapIndexes = new Dictionary<int, int>();
         public Dictionary<int, Glyf> Glyfs { get; set; } = new Dictionary<int, Glyf>();
@@ -49,11 +52,27 @@ namespace MyvarEdit.TrueType
                 var te = ReadStruct<TableEntry>(stream);
                 var id = te.ToString();
                 var oldPos = stream.Position;
+                Console.WriteLine(id);
                 switch (id)
                 {
                     case "head":
                         stream.Position = te.Offset;
                         Header = ReadStruct<TrueTypeHeader>(stream);
+                        break;
+                    case "hhea":
+                        stream.Position = te.Offset;
+                        HorizontalHeaderTable = ReadStruct<HorizontalHeaderTable>(stream);
+                        break;
+                    case "vhea":
+                        stream.Position = te.Offset;
+                        VerticalHeaderTable = ReadStruct<VerticalHeaderTable>(stream);
+                        break;
+                    case "hmtx":
+                        stream.Position = te.Offset;
+                        for (int j = 0; j < HorizontalHeaderTable.numOfLongHorMetrics; j++)
+                        {
+                            longHorMetrics.Add(ReadStruct<longHorMetric>(stream));
+                        }
 
                         break;
                     case "maxp":
@@ -91,13 +110,11 @@ namespace MyvarEdit.TrueType
             {
                 if (glyf.Components.Count != 0)
                 {
-                    if (charcode == ':') Debugger.Break();
                     foreach (var component in glyf.Components)
                     {
-                      
-                        stream.Position = glyfOffset +GetGlyphOffset(glyfOffsetTe, stream, component.GlyphIndex);
+                        stream.Position = glyfOffset + GetGlyphOffset(glyfOffsetTe, stream, component.GlyphIndex);
                         var g = ReadGlyph(stream, (byte) charcode);
-                        
+
 
                         var shapes = DeepCopier.Copy(g.Triangles);
 
@@ -341,6 +358,9 @@ namespace MyvarEdit.TrueType
 
                 tess.Tessellate(LibTessDotNet.WindingRule.EvenOdd, LibTessDotNet.ElementType.Polygons, 3);
 
+                var xSize = re.Xmax + Math.Abs(re.Xmin);
+                var ySize = re.Ymax;
+
                 int numTriangles = tess.ElementCount;
                 for (int i = 0; i < numTriangles; i++)
                 {
@@ -350,6 +370,10 @@ namespace MyvarEdit.TrueType
 
                     re.Triangles.Add(new ComponentTriangle()
                     {
+                        // A = new GlyfPoint(v0.X, v0.Y * -1 + ySize),
+                        // B = new GlyfPoint(v1.X, v1.Y * -1 + ySize),
+                        //C = new GlyfPoint(v2.X, v2.Y * -1 + ySize),
+
                         A = new GlyfPoint(v0.X, v0.Y),
                         B = new GlyfPoint(v1.X, v1.Y),
                         C = new GlyfPoint(v2.X, v2.Y),
@@ -472,7 +496,6 @@ namespace MyvarEdit.TrueType
                     //@Hack should not do this but just to test for now
                     for (int charCode = 0; charCode < 255; charCode++)
                     {
-                    
                         var found = false;
                         for (int segIdx = 0; segIdx < segcount; segIdx++)
                         {

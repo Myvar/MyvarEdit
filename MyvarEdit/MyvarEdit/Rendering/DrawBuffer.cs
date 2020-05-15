@@ -49,10 +49,9 @@ namespace MyvarEdit.Rendering
 
         public static void Resize(int width, int height)
         {
-            var orth = new Matrix4f().InitIdentity().InitOrthographic(0, width, 0, height, -1, 1);
-            var scale = new Matrix4f().InitIdentity().InitScale(1, -1, 1);
+            var orth = new Matrix4f().InitIdentity().InitOrthographic(0, width, height, 0, -1, 1);
 
-            _orthMat = scale * orth;
+            _orthMat = orth;
 
             ScreenSize = new Size(width, height);
         }
@@ -84,16 +83,22 @@ namespace MyvarEdit.Rendering
 
             foreach (var c in s)
             {
+                var gl = _ttf.Glyfs[(byte) c];
+                var mesh = GlyfCache.GetGlyfMesh(gl);
+                //we need to scale things down
+                var maxWidth = _ttf.Header.Xmax + 0.0000000001f;
+                var maxHeight = _ttf.Header.Ymax + 0.0000000001f;
+
                 if (char.IsWhiteSpace(c))
                 {
                     if (c == '\n')
                     {
-                        yOff += size * lineHeight;
+                        yOff += (size - (size * (_ttf.HorizontalHeaderTable.lineGap / maxHeight)) * lineHeight);
                         xOff = 0;
                     }
                     else if (c == '\t')
                     {
-                        xOff += size  * spacesInTab;
+                        xOff += size * spacesInTab;
                     }
                     else
                     {
@@ -103,11 +108,6 @@ namespace MyvarEdit.Rendering
                     continue;
                 }
 
-                var gl = _ttf.Glyfs[(byte) c];
-                var mesh = GlyfCache.GetGlyfMesh(gl);
-                //we need to scale things down
-                var maxWidth = _ttf.Header.Xmax + MathF.Abs(_ttf.Header.Xmin);
-                var maxHeight = _ttf.Header.Ymax + MathF.Abs(_ttf.Header.Ymin);
 
                 var scaleFactorX = 1f / maxWidth;
                 var scaleFactorY = 1f / maxHeight;
@@ -125,7 +125,7 @@ namespace MyvarEdit.Rendering
                 _rectShader.SetUniform("uColor", clr);
 
 
-                xOff += (size);
+                xOff += size * (_ttf.HorizontalHeaderTable.advanceWidthMax / maxWidth);
 
                 mesh.Draw();
             }

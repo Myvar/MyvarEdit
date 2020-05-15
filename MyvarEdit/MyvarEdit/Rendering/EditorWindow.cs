@@ -57,7 +57,8 @@ namespace MyvarEdit.Rendering
 
             _fpsAvg.Add((float) (1f / (args.Time + 0.00000001f)));
 
-            //DrawBuffer.DrawRect(Color.Red, 10, 10, 100, 100);
+            //DrawBuffer.DrawRect(Color.Green, 0, 0, 20, 20);
+            DrawBuffer.DrawRect(Color.Red, 10, 10, 10, 10);
 
             var sb = new StringBuilder();
 
@@ -69,8 +70,8 @@ namespace MyvarEdit.Rendering
                 if (i % 10 == 0) sb.AppendLine();
             }
 
-            DrawBuffer.DrawString(Color.White, sb.ToString(), 50, 10, 25);
-            //DrawBuffer.DrawString(Color.White, "\"", 50, 10, 25);
+            DrawBuffer.DrawString(Color.White, sb.ToString(), 25, 10, 25);
+           // DrawBuffer.DrawString(Color.White, "A", 20, 25, 25);
 
 
             DrawBuffer.DrawString(Color.Green, $"Fps: {MathF.Round(_fpsAvg.Average(), MidpointRounding.ToEven)}", 10,

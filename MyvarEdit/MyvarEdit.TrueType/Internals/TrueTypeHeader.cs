@@ -95,6 +95,57 @@ namespace MyvarEdit.TrueType.Internals
         public short IndexToLocFormat;
         public short GlyphDataFormat;
     }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct longHorMetric
+    {
+        public ushort advanceWidth;
+        public short leftSideBearing;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct HorizontalHeaderTable
+    {
+        public uint Version;
+        public short ascent;
+        public short descent;
+        public short lineGap;
+        public ushort advanceWidthMax;
+        public short minLeftSideBearing;
+        public short minRightSideBearing;
+        public short xMaxExtent;
+        public short caretSlopeRise;
+        public short caretSlopeRun;
+        public short caretOffset;
+        public short reserved;
+        public short reserved1;
+        public short reserved2;
+        public short reserved4;
+        public short metricDataFormat;
+        public ushort numOfLongHorMetrics;
+    }
+    
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct VerticalHeaderTable
+    {
+        public uint Version;
+        public short vertTypoAscender;
+        public short vertTypoDescender;
+        public short vertTypoLineGap;
+        public short advanceHeightMax;
+        public short minTopSideBearing;
+        public short minBottomSideBearing;
+        public short yMaxExtent;
+        public short caretSlopeRise;
+        public short caretSlopeRun;
+        public short caretOffset;
+        public short reserved;
+        public short reserved1;
+        public short reserved2;
+        public short reserved4;
+        public short metricDataFormat;
+        public ushort numOfLongVerMetrics;
+    }
     
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct MaxP    
