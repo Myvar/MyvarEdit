@@ -86,9 +86,6 @@ namespace MyvarEdit.TrueType
                         break;
                     case "loca":
                         glyfOffsetTe = te;
-                        //@Hack should not do this but just to test for now
-                        for (int charCode = 0; charCode < 255; charCode++)
-                            glyfOffsets.Add(GetGlyphOffset(te, stream, charCode));
                         break;
                     case "glyf":
                         glyfOffset = (int) te.Offset;
@@ -101,7 +98,7 @@ namespace MyvarEdit.TrueType
             for (int charCode = 0; charCode < 255; charCode++)
             {
                 var maped = _cMapIndexes[charCode];
-                stream.Position = glyfOffset + glyfOffsets[maped];
+                stream.Position = glyfOffset + GetGlyphOffset(glyfOffsetTe, stream, maped);
                 Glyfs.Add(charCode, ReadGlyph(stream, (byte) charCode));
             }
 

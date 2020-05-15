@@ -28,7 +28,7 @@ namespace MyvarEdit.Rendering
 
         public static void Init(int width, int height)
         {
-            _ttf.Load("./Fonts/iosevka-fixed-regular.ttf");
+            _ttf.Load("./Fonts/Hack-Regular.ttf");
             _lineShader = new Shader(File.ReadAllText("./Shaders/line.glsl"));
             _rectShader = new Shader(File.ReadAllText("./Shaders/rect.glsl"));
             _quad = new Mesh();
@@ -125,7 +125,7 @@ namespace MyvarEdit.Rendering
                 _rectShader.SetUniform("uColor", clr);
 
 
-                xOff += size * (_ttf.HorizontalHeaderTable.advanceWidthMax / maxWidth);
+                xOff += size * (_ttf.longHorMetrics[0].advanceWidth / maxWidth);
 
                 mesh.Draw();
             }
