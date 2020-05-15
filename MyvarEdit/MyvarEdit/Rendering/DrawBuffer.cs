@@ -28,7 +28,7 @@ namespace MyvarEdit.Rendering
 
         public static void Init(int width, int height)
         {
-            _ttf.Load("./Fonts/Hack-Regular.ttf");
+            _ttf.Load("./Fonts/iosevka-fixed-regular.ttf");
             _lineShader = new Shader(File.ReadAllText("./Shaders/line.glsl"));
             _rectShader = new Shader(File.ReadAllText("./Shaders/rect.glsl"));
             _quad = new Mesh();
@@ -76,21 +76,38 @@ namespace MyvarEdit.Rendering
 
         public static void DrawString(Color clr, string s, float size, Point p)
         {
+            var lineHeight = 1.0f;
+            var spacesInTab = 4;
+
             var xOff = 0f;
+            var yOff = 0f;
 
             foreach (var c in s)
             {
                 if (char.IsWhiteSpace(c))
                 {
-                    xOff += size;
+                    if (c == '\n')
+                    {
+                        yOff += size * lineHeight;
+                        xOff = 0;
+                    }
+                    else if (c == '\t')
+                    {
+                        xOff += size  * spacesInTab;
+                    }
+                    else
+                    {
+                        xOff += size;
+                    }
+
                     continue;
                 }
 
                 var gl = _ttf.Glyfs[(byte) c];
                 var mesh = GlyfCache.GetGlyfMesh(gl);
                 //we need to scale things down
-                var maxWidth = gl.Xmax + MathF.Abs(gl.Xmin);
-                var maxHeight = gl.Ymax + MathF.Abs(gl.Ymin);
+                var maxWidth = _ttf.Header.Xmax + MathF.Abs(_ttf.Header.Xmin);
+                var maxHeight = _ttf.Header.Ymax + MathF.Abs(_ttf.Header.Ymin);
 
                 var scaleFactorX = 1f / maxWidth;
                 var scaleFactorY = 1f / maxHeight;
@@ -99,7 +116,7 @@ namespace MyvarEdit.Rendering
                 var scaleX = size * scaleFactorX;
                 var scaleY = size * scaleFactorY;
 
-                var trans = new Matrix4f().InitIdentity().InitTranslation(xOff + p.X, p.Y + (size), 0);
+                var trans = new Matrix4f().InitIdentity().InitTranslation(xOff + p.X, yOff + p.Y + (size), 0);
                 var scale = new Matrix4f().InitIdentity().InitScale(scaleX, -scaleY, 0);
 
 
@@ -108,7 +125,7 @@ namespace MyvarEdit.Rendering
                 _rectShader.SetUniform("uColor", clr);
 
 
-                xOff += size;
+                xOff += (size);
 
                 mesh.Draw();
             }

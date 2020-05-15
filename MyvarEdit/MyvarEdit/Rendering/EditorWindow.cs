@@ -1,4 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
 using OpenToolkit.Graphics.OpenGL;
 using OpenToolkit.Windowing.Common;
 using OpenToolkit.Windowing.Desktop;
@@ -14,6 +18,7 @@ namespace MyvarEdit.Rendering
             gameWindowSettings, nativeWindowSettings)
         {
             Title = "MyvarEdit";
+            VSync = VSyncMode.Off;
         }
 
         protected override void OnLoad()
@@ -42,15 +47,35 @@ namespace MyvarEdit.Rendering
         }
 
 
+        private List<float> _fpsAvg = new List<float>();
+
         protected override void OnRenderFrame(FrameEventArgs args)
         {
             _target.Bind();
             GL.ClearColor(0, 0, 0, 0);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            DrawBuffer.DrawRect(Color.Red, 10, 10, 100, 100);
-            DrawBuffer.DrawString(Color.Cyan, "Hello World", 50, 50, 50);
-            DrawBuffer.DrawString(Color.Cyan, "Hello World", 50, 50, 115);
+            _fpsAvg.Add((float) (1f / (args.Time + 0.00000001f)));
+
+            //DrawBuffer.DrawRect(Color.Red, 10, 10, 100, 100);
+
+            var sb = new StringBuilder();
+
+            for (int i = 33; i < 127; i++)
+            {
+                var c = (char) i;
+                sb.Append(c);
+
+                if (i % 10 == 0) sb.AppendLine();
+            }
+
+            DrawBuffer.DrawString(Color.White, sb.ToString(), 50, 10, 25);
+            //DrawBuffer.DrawString(Color.White, "\"", 50, 10, 25);
+
+
+            DrawBuffer.DrawString(Color.Green, $"Fps: {MathF.Round(_fpsAvg.Average(), MidpointRounding.ToEven)}", 10,
+                10, 10);
+
 
             DrawBuffer.Flush();
 
@@ -59,6 +84,8 @@ namespace MyvarEdit.Rendering
             _target.Blit();
 
             SwapBuffers();
+
+            if (_fpsAvg.Count == 1000) _fpsAvg.RemoveAt(0);
         }
     }
 }

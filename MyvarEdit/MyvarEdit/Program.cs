@@ -26,7 +26,8 @@ namespace MyvarEdit
             {
                 Title = "MyvarEdit",
                 APIVersion = new Version(4, 6),
-                //Size = new Vector2i(1000,1000)
+                //Size = new Vector2i(1000,1000),
+                
             });
             window.Run();
         }

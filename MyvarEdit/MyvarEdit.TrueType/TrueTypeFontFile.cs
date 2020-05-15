@@ -42,6 +42,7 @@ namespace MyvarEdit.TrueType
 
             var glyfOffsets = new List<int>();
             var glyfOffset = 0;
+            TableEntry glyfOffsetTe = new TableEntry();
 
             for (int i = 0; i < off.NumTables; i++)
             {
@@ -65,8 +66,9 @@ namespace MyvarEdit.TrueType
                         ReadCmap(stream);
                         break;
                     case "loca":
+                        glyfOffsetTe = te;
                         //@Hack should not do this but just to test for now
-                        for (int charCode = 0; charCode < 10000; charCode++)
+                        for (int charCode = 0; charCode < 255; charCode++)
                             glyfOffsets.Add(GetGlyphOffset(te, stream, charCode));
                         break;
                     case "glyf":
@@ -89,48 +91,38 @@ namespace MyvarEdit.TrueType
             {
                 if (glyf.Components.Count != 0)
                 {
+                    if (charcode == ':') Debugger.Break();
                     foreach (var component in glyf.Components)
                     {
-                        var componentCharCode = _cMapIndexes.Values.ToList().IndexOf(component.GlyphIndex);
+                      
+                        stream.Position = glyfOffset +GetGlyphOffset(glyfOffsetTe, stream, component.GlyphIndex);
+                        var g = ReadGlyph(stream, (byte) charcode);
+                        
 
-                        if (componentCharCode == -1) componentCharCode = 0;
-
-                        if (!Glyfs.ContainsKey(componentCharCode))
-                        {
-                            var maped = _cMapIndexes[componentCharCode];
-                            stream.Position = glyfOffset + glyfOffsets[maped];
-                            Glyfs.Add(componentCharCode, ReadGlyph(stream, (byte) charcode));
-                        }
-
-                        var shapes = DeepCopier.Copy(Glyfs[componentCharCode].Shapes);
+                        var shapes = DeepCopier.Copy(g.Triangles);
 
 
                         if (component.Flags.HasFlag(ComponentFlags.UseMyMetrics))
                         {
-                            glyf.Xmax = Glyfs[componentCharCode].Xmax;
-                            glyf.Xmin = Glyfs[componentCharCode].Xmin;
-                            glyf.Ymax = Glyfs[componentCharCode].Ymax;
-                            glyf.Ymin = Glyfs[componentCharCode].Ymin;
+                            glyf.Xmax = g.Xmax;
+                            glyf.Xmin = g.Xmin;
+                            glyf.Ymax = g.Ymax;
+                            glyf.Ymin = g.Ymin;
                         }
 
-                        foreach (var shape in shapes)
+                        foreach (var triangle in shapes)
                         {
-                            foreach (var point in shape)
-                            {
-                                if (component.Flags.HasFlag(ComponentFlags.UnscaledComponentOffset))
-                                {
-                                    point.X += component.E;
-                                    point.Y += component.F;
-                                }
-                                else
-                                {
-                                    point.X = component.A * point.X + component.B * point.Y + component.E;
-                                    point.Y = component.C * point.X + component.D * point.Y + component.F;
-                                }
-                            }
+                            triangle.A.X = component.A * triangle.A.X + component.B * triangle.A.Y + component.E;
+                            triangle.A.Y = component.C * triangle.A.X + component.D * triangle.A.Y + component.F;
+
+                            triangle.B.X = component.A * triangle.B.X + component.B * triangle.B.Y + component.E;
+                            triangle.B.Y = component.C * triangle.B.X + component.D * triangle.B.Y + component.F;
+
+                            triangle.C.X = component.A * triangle.C.X + component.B * triangle.C.Y + component.E;
+                            triangle.C.Y = component.C * triangle.C.X + component.D * triangle.C.Y + component.F;
                         }
 
-                        glyf.Shapes.AddRange(shapes);
+                        glyf.Triangles.AddRange(shapes);
                     }
                 }
             }
@@ -296,7 +288,6 @@ namespace MyvarEdit.TrueType
                     }
                 }
 
-                // if (charcode == (byte) '8') Debugger.Break();
 
                 foreach (var shape in re.Shapes)
                 {
@@ -332,12 +323,45 @@ namespace MyvarEdit.TrueType
 
                     //shape.Add(shapes.Last());
                 }
+
+                //now triangulate glyf
+                var tess = new LibTessDotNet.Tess();
+
+                foreach (var shape in re.Shapes)
+                {
+                    var contour = new LibTessDotNet.ContourVertex[shape.Count];
+                    for (var i = 0; i < shape.Count; i++)
+                    {
+                        var point = shape[i];
+                        contour[i] = new ContourVertex(new Vec3(point.X, point.Y, 0));
+                    }
+
+                    tess.AddContour(contour);
+                }
+
+                tess.Tessellate(LibTessDotNet.WindingRule.EvenOdd, LibTessDotNet.ElementType.Polygons, 3);
+
+                int numTriangles = tess.ElementCount;
+                for (int i = 0; i < numTriangles; i++)
+                {
+                    var v0 = tess.Vertices[tess.Elements[i * 3]].Position;
+                    var v1 = tess.Vertices[tess.Elements[i * 3 + 1]].Position;
+                    var v2 = tess.Vertices[tess.Elements[i * 3 + 2]].Position;
+
+                    re.Triangles.Add(new ComponentTriangle()
+                    {
+                        A = new GlyfPoint(v0.X, v0.Y),
+                        B = new GlyfPoint(v1.X, v1.Y),
+                        C = new GlyfPoint(v2.X, v2.Y),
+                    });
+                }
             }
             else
             {
                 s.Position = topPos;
                 var components = new List<ComponentGlyph>();
                 var flag = ComponentFlags.MoreComponents;
+
 
                 while (flag.HasFlag(ComponentFlags.MoreComponents))
                 {
@@ -401,38 +425,6 @@ namespace MyvarEdit.TrueType
                 re.Components.AddRange(components);
             }
 
-            //now triangulate glyf
-            var tess = new LibTessDotNet.Tess();
-
-            foreach (var shape in re.Shapes)
-            {
-                var contour = new LibTessDotNet.ContourVertex[shape.Count];
-                for (var i = 0; i < shape.Count; i++)
-                {
-                    var point = shape[i];
-                    contour[i] = new ContourVertex(new Vec3(point.X, point.Y, 0));
-                }
-
-                tess.AddContour(contour);
-            }
-
-            tess.Tessellate(LibTessDotNet.WindingRule.EvenOdd, LibTessDotNet.ElementType.Polygons, 3);
-
-            int numTriangles = tess.ElementCount;
-            for (int i = 0; i < numTriangles; i++)
-            {
-                var v0 = tess.Vertices[tess.Elements[i * 3]].Position;
-                var v1 = tess.Vertices[tess.Elements[i * 3 + 1]].Position;
-                var v2 = tess.Vertices[tess.Elements[i * 3 + 2]].Position;
-
-                re.Triangles.Add(new ComponentTriangle()
-                {
-                    A = new GlyfPoint(v0.X, v0.Y),
-                    B = new GlyfPoint(v1.X, v1.Y),
-                    C = new GlyfPoint(v2.X, v2.Y),
-                });
-            }
-
             return re;
         }
 
@@ -478,10 +470,11 @@ namespace MyvarEdit.TrueType
                     var startOfIndexArray = s.Position;
 
                     //@Hack should not do this but just to test for now
-                    for (int charCode = 0; charCode < 10000; charCode++)
+                    for (int charCode = 0; charCode < 255; charCode++)
                     {
+                    
                         var found = false;
-                        for (int segIdx = 0; segIdx < segcount - 1; segIdx++)
+                        for (int segIdx = 0; segIdx < segcount; segIdx++)
                         {
                             if (endCode[segIdx] >= charCode && startCode[segIdx] <= charCode)
                             {
@@ -490,8 +483,6 @@ namespace MyvarEdit.TrueType
                                     var z =
                                         idRangeOffset[
                                             segIdx + idRangeOffset[segIdx] / 2 + (charCode - startCode[segIdx])];
-
-                                    // var z = ReadArray<short>(s, 1)[0];
 
                                     var delta = (short) idDelta[segIdx];
                                     _cMapIndexes.Add(charCode, (short) (z) + delta);
