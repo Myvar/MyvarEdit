@@ -52,7 +52,6 @@ namespace MyvarEdit.TrueType
                 var te = ReadStruct<TableEntry>(stream);
                 var id = te.ToString();
                 var oldPos = stream.Position;
-                Console.WriteLine(id);
                 switch (id)
                 {
                     case "head":

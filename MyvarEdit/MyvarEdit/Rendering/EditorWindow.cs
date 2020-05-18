@@ -57,25 +57,10 @@ namespace MyvarEdit.Rendering
 
             _fpsAvg.Add((float) (1f / (args.Time + 0.00000001f)));
 
-            //DrawBuffer.DrawRect(Color.Green, 0, 0, 20, 20);
-            DrawBuffer.DrawRect(Color.Red, 10, 10, 10, 10);
-
-            var sb = new StringBuilder();
-
-            for (int i = 33; i < 127; i++)
-            {
-                var c = (char) i;
-                sb.Append(c);
-
-                if (i % 10 == 0) sb.AppendLine();
-            }
-
-            DrawBuffer.DrawString(Color.White, sb.ToString(), 25, 10, 25);
-           // DrawBuffer.DrawString(Color.White, "A", 20, 25, 25);
-
+            MyvarEditEngine.Draw();
 
             DrawBuffer.DrawString(Color.Green, $"Fps: {MathF.Round(_fpsAvg.Average(), MidpointRounding.ToEven)}", 10,
-                10, 10);
+                10, DrawBuffer.ScreenSize.Height - 15);
 
 
             DrawBuffer.Flush();
@@ -87,6 +72,11 @@ namespace MyvarEdit.Rendering
             SwapBuffers();
 
             if (_fpsAvg.Count == 1000) _fpsAvg.RemoveAt(0);
+        }
+
+        protected override void OnKeyDown(KeyboardKeyEventArgs e)
+        {
+            MyvarEditEngine.Input.Handel(e);
         }
     }
 }

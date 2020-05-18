@@ -10,6 +10,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
       <PackageReference Include="OpenTK" Version="4.0.0-pre9.1" />
     </ItemGroup>
 

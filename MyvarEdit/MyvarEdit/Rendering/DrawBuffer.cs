@@ -73,6 +73,47 @@ namespace MyvarEdit.Rendering
             _quad.Draw();
         }
 
+        public static Size MesureString(string s, float size)
+        {
+            var lineHeight = 1.0f;
+            var spacesInTab = 4;
+
+            var xOff = 0f;
+            var yOff = 0f;
+
+            foreach (var c in s)
+            {
+                var gl = _ttf.Glyfs[(byte) c];
+                var mesh = GlyfCache.GetGlyfMesh(gl);
+                //we need to scale things down
+                var maxWidth = _ttf.Header.Xmax + 0.0000000001f;
+                var maxHeight = _ttf.Header.Ymax + 0.0000000001f;
+
+                if (char.IsWhiteSpace(c))
+                {
+                    if (c == '\n')
+                    {
+                        yOff += (size - (size * (_ttf.HorizontalHeaderTable.lineGap / maxHeight)) * lineHeight);
+                        xOff = 0;
+                    }
+                    else if (c == '\t')
+                    {
+                        xOff += size * spacesInTab;
+                    }
+                    else
+                    {
+                        xOff += size;
+                    }
+
+                    continue;
+                }
+
+                xOff += size * (_ttf.longHorMetrics[0].advanceWidth / maxWidth);
+            }
+
+            return new Size(xOff, yOff);
+        }
+
         public static void DrawString(Color clr, string s, float size, Point p)
         {
             var lineHeight = 1.0f;
