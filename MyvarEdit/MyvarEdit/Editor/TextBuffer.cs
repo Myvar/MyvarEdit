@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using F23.StringSimilarity;
 using MyvarEdit.Rendering;
 using MyvarEdit.Utils;
 using OpenToolkit.Windowing.Common;
@@ -20,6 +21,7 @@ namespace MyvarEdit.Editor
         private string Cache = "";
         private List<string> cachedList = new List<string>();
         private int CompleteOffset = 0;
+
 
         public void DrawToPane(Pane p)
         {
@@ -55,6 +57,15 @@ namespace MyvarEdit.Editor
 
                     var word = words.Last().ToLower().Trim();
 
+                    foreach (var affix in MyvarEditEngine.Affixes)
+                    {
+                        if (word.EndsWith(affix) && !MyvarEditEngine.WebstersEnglishDictionary.ContainsKey(word))
+                        {
+                            MyvarEditEngine.WebstersEnglishDictionary.Add(word,
+                               "see " + word);
+                            break;
+                        }
+                    }
 
                     if (Cache != word)
                     {
@@ -89,7 +100,7 @@ namespace MyvarEdit.Editor
                         var def = MyvarEditEngine.WebstersEnglishDictionary[cachedList[CompleteOffset]].Split(' ');
                         var longest = def.Max(x => x.Length);
                         var spacing = longest * 10;
-                        var maxWidthDef = 500;
+                        var maxWidthDef = 800;
                         var wordsPerline = maxWidthDef / spacing;
 
                         var sb = new StringBuilder();
@@ -109,14 +120,37 @@ namespace MyvarEdit.Editor
             }
         }
 
+        private static int Compear(string a, string b)
+        {
+            var re = 0;
+
+            foreach (var c in a)
+            {
+                if (b.Contains(c)) re++;
+            }
+
+            return re;
+        }
+
         private List<string> FindClosest(string s, int count)
         {
-            var sorted = new List<(int, string)>();
+            var sorted = new List<(double, string)>();
 
+            // var jw = new JaroWinkler();
+            var lcs = new LongestCommonSubsequence();
+            //var twogram = new QGram(2);
+            //var lcs = new MetricLCS();
             foreach (var (key, value) in MyvarEditEngine.WebstersEnglishDictionary)
             {
-                if (key.Length != 1)
-                    sorted.Add((LevenshteinDistance.Compute(s, key), key));
+                // if (key.Length != 1)
+                {
+                    //sorted.Add((Compear(s, key), key));
+                    //sorted.Add((Fastenshtein.Levenshtein.Distance(s, key), key));
+                    //sorted.Add((jw.Similarity(s, key), key));
+                    sorted.Add((lcs.Distance(s, key), key));
+                    //sorted.Add((twogram.Distance(s, key), key));
+                    //sorted.Add((LevenshteinDistance.Compute(s, key), key));
+                }
             }
 
             var re = new List<string>();
@@ -140,8 +174,18 @@ namespace MyvarEdit.Editor
                 if (CompleteOffset >= 5) CompleteOffset = 0;
             }
 
-            if (key == Key.Space && e.Shift)
+            if (key == Key.Space)
             {
+                var l = new Levenshtein();
+                if (l.Distance(cachedList[CompleteOffset], Cache) <= 1)
+                {
+                    
+                }
+                else
+                {
+                    if (!e.Shift) return;
+                }
+
                 for (var i = 0; i < Lines.Count; i++)
                 {
                     var line = Lines[i];
@@ -252,7 +296,7 @@ namespace MyvarEdit.Editor
             }
             else if (c == '\b')
             {
-                if (Lines[Line].Length == 0)
+                if (Line != 0 && Lines[Line].Length == 0)
                 {
                     Col = Lines[Line - 1].Length;
 
@@ -260,7 +304,7 @@ namespace MyvarEdit.Editor
                     Lines.RemoveAt(Line);
                     Line--;
                 }
-                else
+                else if (Lines[Line].Length != 0)
                 {
                     Lines[Line] = Lines[Line].Remove(Lines[Line].Length - 1);
                     Col--;

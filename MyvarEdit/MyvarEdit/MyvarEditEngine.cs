@@ -13,6 +13,7 @@ namespace MyvarEdit
     public static class MyvarEditEngine
     {
         public static Dictionary<string, string> WebstersEnglishDictionary { get; set; }
+        public static List<string> Affixes { get; set; } = new List<string>();
         public static Input Input { get; set; } = new Input();
 
         static MyvarEditEngine()
@@ -26,6 +27,8 @@ namespace MyvarEdit
             sw.Stop();
             Console.WriteLine($"Loading Dict took {sw.ElapsedMilliseconds}ms.");
             Console.WriteLine(WebstersEnglishDictionary.Count);
+            
+            Affixes.AddRange(File.ReadAllLines("afixes"));
         }
 
         private static void SendKey(KeyboardKeyEventArgs e)
